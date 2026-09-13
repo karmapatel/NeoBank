@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ account.account_type.capitalize() }} Account Statement | NeoBank{% endblock %}
+{% block page_title %}{{ account.account_type.capitalize() }} Account Passbook{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: 24px;">
+
+  <!-- Breadcrumb & Back Link -->
+  <div>
+    <a href="{{ url_for('accounts_hub') }}" style="font-size: 0.84rem; color: var(--brand-primary); font-weight: 500; display: inline-flex; align-items: center; gap: 4px;">
+      &larr; Back to All Accounts
+    </a>
+  </div>
+
+  <!-- Account Summary Header Card -->
+  <div class="card" style="border-top: 3px solid {% if account.account_type == 'checking' %}var(--brand-primary){% elif account.account_type == 'savings' %}#059669{% elif account.account_type == 'fixed_deposit' %}#d97706{% else %}#6366f1{% endif %};">
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 20px;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="badge {% if account.account_type == 'checking' %}badge-info{% elif account.account_type == 'savings' %}badge-success{% elif account.account_type == 'fixed_deposit' %}badge-warning{% else %}badge-neutral{% endif %}" style="text-transform: uppercase;">
+            {{ account.account_type.replace('_', ' ') }} Account
+          </span>
+          <span class="badge badge-success">{{ account.status.capitalize() }}</span>
+        </div>
+        <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--text-primary); margin-top: 6px;">
+          {% if account.account_type == 'checking' %}
+            Premier Checking Account
+          {% elif account.account_type == 'savings' %}
+            High-Yield Savings Account (6.5% p.a. APY)
+          {% elif account.account_type == 'fixed_deposit' %}
+            Fixed Term Deposit (7.25% p.a. Yield)
+          {% elif account.account_type == 'business' %}
+            Corporate / Business Account
+          {% else %}
+            {{ account.account_type.capitalize() }} Account
+          {% endif %}
+        </h2>
+        <div style="font-size: 0.84rem; color: var(--text-tertiary); font-family: var(--font-mono); margin-top: 2px;">
+          A/C: {{ account.formatted_number }} &bull; IFSC: NEOB0001234 &bull; Mumbai Digital Branch
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 8px;">
+        <a href="{{ url_for('deposit') }}" class="btn btn-secondary btn-sm">+ Deposit</a>
+        <a href="{{ url_for('withdraw') }}" class="btn btn-secondary btn-sm">Withdraw</a>
+        <a href="{{ url_for('transfer') }}" class="btn btn-primary btn-sm">Transfer Out</a>
+      </div>
+    </div>
+
+    <!-- Balance stats row -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; background: var(--bg-surface-elevated); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+      <div>
+        <div style="font-size: 0.74rem; color: var(--text-tertiary);">Current Available Balance</div>
+        <div class="maskable-balance mono-num" style="font-size: 1.8rem; font-weight: 700; color: var(--text-primary); margin-top: 2px;">
+          {{ account.balance | currency }}
+        </div>
+      </div>
+      <div>
+        <div style="font-size: 0.74rem; color: var(--text-tertiary);">Applicable Interest Rate</div>
+        <div class="mono-num" style="font-size: 1.25rem; font-weight: 600; color: {% if account.account_type == 'savings' %}#059669{% elif account.account_type == 'fixed_deposit' %}#d97706{% else %}var(--text-primary){% endif %}; margin-top: 2px;">
+          {% if account.account_type == 'savings' %}
+            6.50% p.a.
+          {% elif account.account_type == 'fixed_deposit' %}
+            7.25% p.a.
+          {% elif account.account_type == 'business' %}
+            4.00% p.a.
+          {% else %}
+            3.50% p.a.
+          {% endif %}
+        </div>
+      </div>
+      <div>
+        <div style="font-size: 0.74rem; color: var(--text-tertiary);">Account Currency</div>
+        <div class="mono-num" style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary); margin-top: 2px;">
+          INR (₹) Indian Rupee
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Account Specific Ledger Table -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">Account Passbook & Transactions</h2>
+        <div class="card-subtitle">Activity specifically recorded for A/C {{ account.formatted_number }}</div>
+      </div>
+      <span class="badge badge-neutral">{{ transactions | length }} Records</span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Reference #</th>
+            <th>Particulars</th>
+            <th>Category</th>
+            <th>Date & Time</th>
+            <th style="text-align: right;">Amount (₹)</th>
+            <th style="text-align: center;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if transactions %}
+            {% for t in transactions %}
+            {% set is_credit = (t.dest_account_id == account.id) %}
+            <tr class="transaction-row">
+              <td>
+                <span class="mono-num" style="font-size: 0.75rem; color: var(--text-secondary); cursor: pointer;" title="Copy Ref" data-copy="{{ t.reference_id }}">
+                  {{ t.reference_id }}
+                </span>
+              </td>
+              <td>
+                <div style="font-weight: 500; color: var(--text-primary);">{{ t.description }}</div>
+              </td>
+              <td>
+                <span class="badge badge-neutral">{{ t.category }}</span>
+              </td>
+              <td style="color: var(--text-tertiary); font-size: 0.78rem; white-space: nowrap;">
+                {{ t.timestamp | datetime_format }}
+              </td>
+              <td style="text-align: right; white-space: nowrap;">
+                <span class="mono-num maskable-balance {% if is_credit %}amount-positive{% else %}amount-negative{% endif %}" style="font-size: 0.9rem; font-weight: 700;">
+                  {% if is_credit %}+{% else %}-{% endif %}{{ t.amount | currency }}
+                </span>
+              </td>
+              <td style="text-align: center;">
+                <span class="badge badge-success">{{ t.status.capitalize() }}</span>
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-tertiary); padding: 36px;">
+                No transactions recorded for this account yet.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+
+{% block title %}My Accounts | NeoBank{% endblock %}
+{% block page_title %}My Accounts & Deposit Portfolios{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: 24px;">
+
+  <!-- Accounts List Grid -->
+  <div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+      <div>
+        <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary);">Linked Bank Accounts</h2>
+        <span style="font-size: 0.8rem; color: var(--text-tertiary);">Total Available: <strong class="mono-num" style="color: var(--text-primary);">{{ user.total_balance | currency }}</strong> ({{ accounts | length }} Active Accounts)</span>
+      </div>
+      <a href="{{ url_for('open_account') }}" class="btn btn-primary btn-sm">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <span>+ Open New Account</span>
+      </a>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px;">
+      {% for acc in accounts %}
+      <div class="card" style="border-top: 3px solid {% if acc.account_type == 'checking' %}var(--brand-primary){% elif acc.account_type == 'savings' %}#059669{% elif acc.account_type == 'fixed_deposit' %}#d97706{% else %}#6366f1{% endif %}; display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+            <div>
+              <span class="badge {% if acc.account_type == 'checking' %}badge-info{% elif acc.account_type == 'savings' %}badge-success{% elif acc.account_type == 'fixed_deposit' %}badge-warning{% else %}badge-neutral{% endif %}" style="text-transform: uppercase;">
+                {{ acc.account_type.replace('_', ' ') }} Account
+              </span>
+              <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-top: 4px;">
+                {% if acc.account_type == 'checking' %}
+                  Premier Checking Account
+                {% elif acc.account_type == 'savings' %}
+                  High-Yield Savings Account
+                {% elif acc.account_type == 'fixed_deposit' %}
+                  Fixed Deposit Account
+                {% elif acc.account_type == 'business' %}
+                  Corporate / Business Account
+                {% else %}
+                  {{ acc.account_type.capitalize() }} Account
+                {% endif %}
+              </h3>
+            </div>
+            <span class="badge badge-success">{{ acc.status.capitalize() }}</span>
+          </div>
+
+          <!-- Balance block -->
+          <div style="margin: 12px 0 16px 0;">
+            <div style="font-size: 0.76rem; color: var(--text-tertiary); margin-bottom: 2px;">Available Liquid Balance</div>
+            <div class="maskable-balance mono-num" style="font-size: 2rem; font-weight: 700; color: var(--text-primary);">
+              {{ acc.balance | currency }}
+            </div>
+          </div>
+
+          <!-- Account Meta Details Table -->
+          <div style="background: var(--bg-surface-elevated); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 8px; font-size: 0.8rem; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-tertiary);">Account Number:</span>
+              <span class="mono-num" style="font-weight: 600; color: var(--text-primary); cursor: pointer;" title="Copy" data-copy="{{ acc.account_number }}">
+                {{ acc.formatted_number }}
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left: 2px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              </span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-tertiary);">IFSC Code:</span>
+              <span class="mono-num" style="font-weight: 600; color: var(--text-primary);">NEOB0001234</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-tertiary);">Branch:</span>
+              <span style="color: var(--text-primary);">Mumbai Digital Banking Unit</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-tertiary);">Interest Rate:</span>
+              <span class="mono-num" style="font-weight: 600; color: {% if acc.account_type == 'savings' %}#059669{% elif acc.account_type == 'fixed_deposit' %}#d97706{% else %}var(--text-primary){% endif %};">
+                {{ "%.2f" | format(acc.effective_interest_rate) }}% p.a.
+              </span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-tertiary);">Autonomous Accrual:</span>
+              <span style="font-size: 0.76rem; font-weight: 600; color: #059669; display: flex; align-items: center; gap: 4px;">
+                <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span>
+                Daily at 12:00 AM
+              </span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-tertiary);">Interest Earned:</span>
+              <span class="mono-num" style="font-weight: 700; color: #059669;">
+                {{ (acc.total_interest_earned or 0.0) | currency }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div style="display: flex; gap: 6px; border-top: 1px solid var(--border-subtle); padding-top: 12px;">
+          <a href="{{ url_for('account_detail', account_id=acc.id) }}" class="btn btn-primary btn-sm" style="flex: 1.2;">
+            <span>Statement & Passbook &rarr;</span>
+          </a>
+          <a href="{{ url_for('deposit') }}" class="btn btn-secondary btn-sm" style="flex: 0.8;">
+            <span>Deposit</span>
+          </a>
+          <a href="{{ url_for('withdraw') }}" class="btn btn-secondary btn-sm" style="flex: 0.8;">
+            <span>Withdraw</span>
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+
+      <!-- Open New Account Action Card -->
+      <div class="card" style="border: 2px dashed var(--border-subtle); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 28px 20px; background: transparent;">
+        <div style="width: 48px; height: 48px; border-radius: 50%; background: #eff6ff; display: flex; align-items: center; justify-content: center; color: var(--brand-primary); margin-bottom: 12px;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </div>
+        <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">Open Another Account</h3>
+        <p style="font-size: 0.8rem; color: var(--text-tertiary); margin-bottom: 16px; max-width: 270px; line-height: 1.45;">
+          Add a high-yield savings (6.5% p.a.), checking, or fixed deposit account under your profile.
+        </p>
+        <a href="{{ url_for('open_account') }}" class="btn btn-primary btn-sm" style="padding: 7px 18px;">
+          <span>+ Open Account &rarr;</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Internal Sweep / Self-Transfer (Checking <-> Savings) -->
+  <div class="card" style="max-width: 740px;">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">Move Money Between Your Accounts (Self-Transfer)</h2>
+        <div class="card-subtitle">Instant zero-fee transfer between your Checking and Savings accounts</div>
+      </div>
+      <span class="badge badge-success">Instant Transfer</span>
+    </div>
+
+    <form method="POST" action="{{ url_for('self_transfer') }}">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="self_source_account">Transfer From</label>
+          <select id="self_source_account" name="source_account_id" class="form-control" onchange="updateDestOptions()">
+            {% for acc in accounts %}
+            <option value="{{ acc.id }}" data-type="{{ acc.account_type }}" {% if loop.first %}selected{% endif %}>
+              {{ acc.account_type.capitalize() }} ({{ acc.formatted_number }}) &bull; Balance: {{ acc.balance | currency }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="self_dest_account">Transfer To</label>
+          <select id="self_dest_account" name="dest_account_id" class="form-control">
+            {% for acc in accounts %}
+            <option value="{{ acc.id }}" data-type="{{ acc.account_type }}" {% if loop.last %}selected{% endif %}>
+              {{ acc.account_type.capitalize() }} ({{ acc.formatted_number }}) &bull; Balance: {{ acc.balance | currency }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="self_amount">Transfer Amount (₹ INR)</label>
+        <input type="number" id="self_amount" name="amount" class="form-control mono-num" placeholder="0.00" step="any" min="0.01" required style="font-size: 1.15rem; font-weight: 600;">
+        
+        <div class="quick-amounts">
+          <button type="button" class="amount-chip" data-target="self_amount" data-amount="1000">+₹1,000</button>
+          <button type="button" class="amount-chip" data-target="self_amount" data-amount="5000">+₹5,000</button>
+          <button type="button" class="amount-chip" data-target="self_amount" data-amount="10000">+₹10,000</button>
+          <button type="button" class="amount-chip" data-target="self_amount" data-amount="25000">+₹25,000</button>
+          <button type="button" class="amount-chip" data-target="self_amount" data-amount="50000">+₹50,000</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="self_remark">Remark (Optional)</label>
+        <input type="text" id="self_remark" name="remark" class="form-control" placeholder="e.g. Allocation to high-yield savings">
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">
+        Transfer Funds Now &rarr;
+      </button>
+    </form>
+  </div>
+
+</div>
+
+<script>
+function updateDestOptions() {
+  const source = document.getElementById('self_source_account');
+  const dest = document.getElementById('self_dest_account');
+  const selectedSourceId = source.value;
+
+  for (let i = 0; i < dest.options.length; i++) {
+    if (dest.options[i].value === selectedSourceId) {
+      dest.options[i].disabled = true;
+    } else {
+      dest.options[i].disabled = false;
+      dest.selectedIndex = i;
+    }
+  }
+}
+document.addEventListener('DOMContentLoaded', updateDestOptions);
+</script>
+{% endblock %}

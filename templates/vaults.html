@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}Savings Goals & Vaults | NeoBank{% endblock %}
+{% block page_title %}Savings Goals & Dedicated Vaults{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: 24px;">
+
+  <!-- Create New Vault Card -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">Open a New Savings Goal</h2>
+        <div class="card-subtitle">Earmark funds for future financial goals with high interest</div>
+      </div>
+      <span class="badge badge-success">6.5% p.a.</span>
+    </div>
+
+    <form method="POST" action="{{ url_for('create_vault') }}">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="vault_name">Goal / Purpose Name</label>
+          <input type="text" id="vault_name" name="name" class="form-control" placeholder="e.g. Higher Education / Goa Vacation" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="target_amount">Target Amount (₹ INR)</label>
+          <input type="number" id="target_amount" name="target_amount" class="form-control mono-num" placeholder="50000.00" step="any" min="1" required>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="initial_stash">Initial Stash from Savings (₹)</label>
+          <input type="number" id="initial_stash" name="initial_stash" class="form-control mono-num" placeholder="0.00" step="any" min="0" value="0.00">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="deadline">Target Completion Date</label>
+          <input type="text" id="deadline" name="deadline" class="form-control" placeholder="e.g. December 2026">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="color">Goal Color Tag</label>
+          <select id="color" name="color" class="form-control">
+            <option value="#1d4ed8">Classic Blue</option>
+            <option value="#059669">Emerald Green</option>
+            <option value="#d97706">Warm Amber</option>
+            <option value="#7c3aed">Violet</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="padding: 9px 20px;">
+        + Create Savings Goal
+      </button>
+    </form>
+  </div>
+
+  <!-- Active Vaults Grid -->
+  <div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <h2 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">Your Active Goals</h2>
+      <span style="font-size: 0.8rem; color: var(--text-tertiary);">Funds are withdrawable back to primary account anytime</span>
+    </div>
+
+    {% if vaults %}
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px;">
+        {% for v in vaults %}
+        <div class="card" style="border-top: 3px solid {{ v.color }}; display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+              <div>
+                <h3 style="font-size: 1rem; font-weight: 600; color: var(--text-primary);">{{ v.name }}</h3>
+                {% if v.deadline %}
+                <span style="font-size: 0.72rem; color: var(--text-tertiary);">Due: {{ v.deadline }}</span>
+                {% endif %}
+              </div>
+              <span class="mono-num badge badge-neutral">{{ v.progress_percentage }}%</span>
+            </div>
+
+            <div style="margin: 12px 0;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 4px;">
+                <div class="mono-num maskable-balance" style="font-size: 1.45rem; font-weight: 700; color: var(--text-primary);">
+                  {{ v.current_amount | currency }}
+                </div>
+                <div class="mono-num" style="font-size: 0.78rem; color: var(--text-tertiary);">
+                  of {{ v.target_amount | currency }}
+                </div>
+              </div>
+
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill" style="width: {{ v.progress_percentage }}%; background: {{ v.color }};"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Move Controls -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; border-top: 1px solid var(--border-subtle); padding-top: 12px;">
+            <form method="POST" action="{{ url_for('deposit_vault', goal_id=v.id) }}">
+              <div style="display: flex; gap: 4px;">
+                <input type="number" name="amount" class="form-control form-control-sm mono-num" placeholder="₹ Add" min="1" step="any" required style="padding: 5px 8px; font-size: 0.82rem;">
+                <button type="submit" class="btn btn-primary btn-sm" title="Add funds">
+                  +
+                </button>
+              </div>
+            </form>
+
+            <form method="POST" action="{{ url_for('withdraw_vault', goal_id=v.id) }}">
+              <div style="display: flex; gap: 4px;">
+                <input type="number" name="amount" class="form-control form-control-sm mono-num" placeholder="₹ Draw" min="1" max="{{ v.current_amount }}" step="any" required style="padding: 5px 8px; font-size: 0.82rem;">
+                <button type="submit" class="btn btn-secondary btn-sm" title="Return to account">
+                  Draw
+                </button>
+              </div>
+            </form>
+          </div>
+
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="card" style="text-align: center; padding: 36px;">
+        <p style="color: var(--text-tertiary);">No savings goals created yet.</p>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

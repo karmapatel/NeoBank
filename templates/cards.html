@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}RuPay Debit Card Management | NeoBank{% endblock %}
+{% block page_title %}Debit Card Security & Controls{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 1.2fr 1.5fr; gap: 28px; max-width: 1040px; margin: 0 auto; align-items: start;">
+
+  <!-- Left: Debit Card Display & Actions -->
+  {% if cards %}
+    {% set card = cards[0] %}
+    <div style="display: flex; flex-direction: column; gap: 18px;">
+      
+      <!-- RuPay Debit Card Component -->
+      <div class="debit-card-wrapper" style="max-width: 100%;">
+        <div class="debit-card" style="padding: 24px;">
+          {% if card.status == 'frozen' %}
+          <div class="card-frozen-overlay">
+            <div class="frozen-stamp">CARD BLOCKED</div>
+            <div style="font-size: 0.72rem; color: #cbd5e1; margin-top: 4px;">Card is temporarily disabled for all transactions</div>
+          </div>
+          {% endif %}
+
+          <div class="card-top-row">
+            <div class="chip-and-contactless">
+              <div class="card-chip"></div>
+              <span style="font-size: 0.78rem; color: rgba(255,255,255,0.85); font-weight: 500;">Debit</span>
+            </div>
+            <div class="card-bank-name">NEOBANK</div>
+          </div>
+
+          <div class="card-middle-row" style="margin: 20px 0;">
+            <div id="virtual-card-number" class="card-number-display" 
+                 data-raw="{{ card.card_number }}" 
+                 data-masked="&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; {{ card.card_number[-4:] }}">
+              &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; {{ card.card_number[-4:] }}
+            </div>
+          </div>
+
+          <div class="card-bottom-row">
+            <div>
+              <div class="card-meta-label">Cardholder</div>
+              <div class="card-meta-value">{{ card.cardholder_name }}</div>
+            </div>
+            <div>
+              <div class="card-meta-label">Valid Thru</div>
+              <div class="card-meta-value mono-num">{{ card.expiry_date }}</div>
+            </div>
+            <div>
+              <div class="card-meta-label">CVV</div>
+              <div id="virtual-card-cvv" class="card-meta-value mono-num" data-raw="{{ card.cvv }}">&bull;&bull;&bull;</div>
+            </div>
+            <div class="card-network-logo">RuPay</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detail Toggle Button -->
+      <button type="button" id="toggle-card-details-btn" class="btn btn-secondary" data-revealed="false" style="width: 100%;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        <span>Reveal Details</span>
+      </button>
+
+      <!-- Block/Unblock Card Form -->
+      <form method="POST" action="{{ url_for('toggle_freeze_card', card_id=card.id) }}">
+        {% if card.status == 'active' %}
+        <button type="submit" class="btn btn-danger" style="width: 100%;">
+          <span>Temporarily Block Card</span>
+        </button>
+        {% else %}
+        <button type="submit" class="btn btn-primary" style="width: 100%;">
+          <span>Unblock & Activate Card</span>
+        </button>
+        {% endif %}
+      </form>
+
+    </div>
+
+    <!-- Right: Card Controls & Daily Limit Configuration -->
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+      
+      <!-- Daily Spending Limit Card -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Domestic POS & E-Commerce Limit</h2>
+            <div class="card-subtitle">Enforce maximum daily spend ceiling</div>
+          </div>
+          <span class="badge badge-info">Active</span>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 6px;">
+            <span style="color: var(--text-secondary);">Today's Utilized Amount</span>
+            <span class="mono-num" style="color: var(--text-primary); font-weight: 600;">₹{{ '{:,.2f}'.format(card.current_spent) }} / ₹{{ '{:,.2f}'.format(card.daily_limit) }}</span>
+          </div>
+          <div class="progress-bar-container">
+            {% set spend_pct = (card.current_spent / card.daily_limit * 100) if card.daily_limit > 0 else 0 %}
+            <div class="progress-bar-fill" style="width: {{ [spend_pct, 100] | min }}%;"></div>
+          </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('update_card_limit', card_id=card.id) }}">
+          <div class="form-group">
+            <label class="form-label" for="daily_limit">Update Daily Limit (₹ INR)</label>
+            <input type="number" id="daily_limit" name="daily_limit" class="form-control mono-num" value="{{ card.daily_limit }}" min="1000" max="200000" step="1000">
+          </div>
+          <button type="submit" class="btn btn-secondary btn-sm" style="width: 100%;">
+            Save Limit
+          </button>
+        </form>
+      </div>
+
+      <!-- Security Controls Checklist -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Transaction Preferences</h2>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid var(--border-subtle);">
+            <div>
+              <div style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary);">Online Domestic E-Commerce</div>
+              <div style="font-size: 0.75rem; color: var(--text-tertiary);">Allow payments on merchant websites & UPI apps</div>
+            </div>
+            <span class="badge badge-success">Enabled</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid var(--border-subtle);">
+            <div>
+              <div style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary);">Contactless (Tap & Pay)</div>
+              <div style="font-size: 0.75rem; color: var(--text-tertiary);">PIN-less tap transactions up to ₹5,000</div>
+            </div>
+            <span class="badge badge-success">Enabled</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary);">ATM Cash Withdrawal</div>
+              <div style="font-size: 0.75rem; color: var(--text-tertiary);">Nationwide NFS & RuPay ATM access</div>
+            </div>
+            <span class="badge badge-success">Enabled</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  {% else %}
+    <div class="card" style="grid-column: span 2; text-align: center; padding: 40px;">
+      <p style="color: var(--text-tertiary);">No debit card assigned.</p>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

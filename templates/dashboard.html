@@ -1,0 +1,368 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | NeoBank Internet Banking{% endblock %}
+{% block page_title %}Account Dashboard{% endblock %}
+
+{% block content %}
+<!-- Top Metrics Grid -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; margin-bottom: 24px;">
+  
+  <!-- Primary Account Balance Card -->
+  <div class="card" style="border-top: 3px solid var(--brand-primary);">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+      <div>
+        <span style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--brand-primary); font-weight: 700;">
+          Primary Account
+        </span>
+        <div style="font-size: 0.8rem; color: var(--text-tertiary); font-family: var(--font-mono); margin-top: 2px;">
+          A/C: {{ primary_account.formatted_number if primary_account else '---' }}
+          <span style="cursor: pointer; margin-left: 4px; color: var(--text-secondary);" title="Copy Account Number" data-copy="{{ primary_account.account_number if primary_account else '' }}">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          </span>
+        </div>
+      </div>
+      <span class="badge badge-success">Active</span>
+    </div>
+
+    <div style="margin: 12px 0 18px 0;">
+      <div style="font-size: 0.76rem; color: var(--text-tertiary); margin-bottom: 2px;">Available Balance</div>
+      <div class="maskable-balance mono-num" style="font-size: 2.1rem; font-weight: 700; color: var(--text-primary);">
+        {{ primary_account.balance | currency if primary_account else '₹0.00' }}
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 8px; border-top: 1px solid var(--border-subtle); padding-top: 12px;">
+      <a href="{{ url_for('deposit') }}" class="btn btn-secondary btn-sm" style="flex: 1;">
+        <span>+ Deposit</span>
+      </a>
+      <a href="{{ url_for('withdraw') }}" class="btn btn-secondary btn-sm" style="flex: 1;">
+        <span>Withdraw</span>
+      </a>
+      <a href="{{ url_for('transfer') }}" class="btn btn-primary btn-sm" style="flex: 1;">
+        <span>Transfer</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Total Relationship Liquidity Card -->
+  <div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+      <span style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); font-weight: 700;">
+        Total Liquid Holdings
+      </span>
+      <span class="badge badge-info">{{ user.accounts | length }} Accounts</span>
+    </div>
+
+    <div style="margin: 12px 0 18px 0;">
+      <div style="font-size: 0.76rem; color: var(--text-tertiary); margin-bottom: 2px;">Consolidated Balance</div>
+      <div class="maskable-balance mono-num" style="font-size: 2.1rem; font-weight: 700; color: var(--text-primary);">
+        {{ user.total_balance | currency }}
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--border-subtle); padding-top: 12px;">
+      {% for acc in user.accounts %}
+      <a href="{{ url_for('account_detail', account_id=acc.id) }}" style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; padding: 6px 8px; border-radius: 6px; background: var(--bg-surface-elevated); transition: background 0.15s;" title="Click to view {{ acc.account_type.capitalize() }} Account">
+        <span style="color: var(--brand-primary); font-weight: 600; text-transform: capitalize;">
+          {{ acc.account_type }} Account (*{{ acc.account_number[-4:] }}) &rarr;
+        </span>
+        <span class="maskable-balance mono-num" style="color: var(--text-primary); font-weight: 600;">{{ acc.balance | currency }}</span>
+      </a>
+      {% endfor %}
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; font-size: 0.75rem;">
+        <a href="{{ url_for('accounts_hub') }}" style="color: var(--brand-primary); font-weight: 600;">
+          View All Accounts &rarr;
+        </a>
+        <a href="{{ url_for('open_account') }}" style="color: #059669; font-weight: 600;">
+          + Open New Account
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Monthly Inflow & Outflow Card -->
+  <div class="card">
+    <span style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); font-weight: 700;">
+      Monthly Cash Flow
+    </span>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0;">
+      <div style="background: var(--bg-surface-elevated); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+        <div style="color: var(--status-success-text); font-size: 0.72rem; font-weight: 600; text-transform: uppercase;">
+          Credit Inflow
+        </div>
+        <div class="maskable-balance mono-num" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-top: 4px;">
+          {{ total_income | currency }}
+        </div>
+      </div>
+
+      <div style="background: var(--bg-surface-elevated); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+        <div style="color: var(--status-danger-text); font-size: 0.72rem; font-weight: 600; text-transform: uppercase;">
+          Debit Outflow
+        </div>
+        <div class="maskable-balance mono-num" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-top: 4px;">
+          {{ total_expense | currency }}
+        </div>
+      </div>
+    </div>
+
+    <div style="font-size: 0.75rem; color: var(--text-tertiary); display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-subtle); padding-top: 10px;">
+      <span>Account standing</span>
+      <span class="badge badge-success">Good Standing</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- Main Section Grid (2 Columns) -->
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start;">
+  
+  <!-- Left Column: Activity & Goals -->
+  <div style="display: flex; flex-direction: column; gap: 24px;">
+
+    <!-- Recent Transactions Ledger -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">Recent Transactions</h2>
+          <div class="card-subtitle">Last 6 settled transactions</div>
+        </div>
+        <a href="{{ url_for('transactions') }}" class="btn btn-secondary btn-sm">
+          <span>View All &rarr;</span>
+        </a>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Particulars</th>
+              <th>Type</th>
+              <th>Date</th>
+              <th style="text-align: right;">Amount (INR)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if recent_transactions %}
+              {% for t in recent_transactions %}
+              {% set is_credit = (t.dest_account_id in [primary_account.id] and t.source_account_id != primary_account.id) %}
+              <tr class="transaction-row">
+                <td>
+                  <div style="font-weight: 600; color: var(--text-primary);">{{ t.description }}</div>
+                  <div style="font-size: 0.72rem; color: var(--text-tertiary); font-family: var(--font-mono);">{{ t.reference_id }}</div>
+                </td>
+                <td>
+                  <span class="badge badge-neutral">{{ t.category }}</span>
+                </td>
+                <td style="color: var(--text-secondary); font-size: 0.8rem; white-space: nowrap;">
+                  {{ t.timestamp | date_format }}
+                </td>
+                <td style="text-align: right; white-space: nowrap;">
+                  <span class="mono-num maskable-balance {% if is_credit %}amount-positive{% else %}amount-negative{% endif %}" style="font-size: 0.92rem; font-weight: 700;">
+                    {% if is_credit %}+{% else %}-{% endif %}{{ t.amount | currency }}
+                  </span>
+                </td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="4" style="text-align: center; color: var(--text-tertiary); padding: 28px;">
+                  No transactions on record yet.
+                </td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Savings Goals -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">Savings Goals & Vaults</h2>
+          <div class="card-subtitle">Dedicated recurring savings allocations</div>
+        </div>
+        <a href="{{ url_for('vaults') }}" class="btn btn-secondary btn-sm">
+          <span>Manage Goals</span>
+        </a>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        {% if vaults %}
+          {% for v in vaults %}
+          <div style="background: var(--bg-surface-elevated); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <div>
+                <span style="font-weight: 600; color: var(--text-primary); font-size: 0.88rem;">{{ v.name }}</span>
+                {% if v.deadline %}
+                <span style="font-size: 0.72rem; color: var(--text-tertiary); margin-left: 6px;">Due: {{ v.deadline }}</span>
+                {% endif %}
+              </div>
+              <div class="mono-num maskable-balance" style="font-size: 0.88rem; font-weight: 700; color: var(--text-primary);">
+                {{ v.current_amount | currency }} <span style="color: var(--text-tertiary); font-weight: 400; font-size: 0.78rem;">/ {{ v.target_amount | currency }}</span>
+              </div>
+            </div>
+
+            <div class="progress-bar-container">
+              <div class="progress-bar-fill" style="width: {{ v.progress_percentage }}%;"></div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 0.72rem; color: var(--text-tertiary);">
+              <span>{{ v.progress_percentage }}% accumulated</span>
+              <a href="{{ url_for('vaults') }}" style="color: var(--brand-primary); font-weight: 600;">+ Add Funds</a>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div style="text-align: center; color: var(--text-tertiary); padding: 20px;">
+            No savings goals established yet.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Right Column: Card, Loan & Quick Pay -->
+  <div style="display: flex; flex-direction: column; gap: 24px;">
+    
+    <!-- Virtual Debit Card Widget -->
+    <div class="card" style="padding: 18px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <span style="font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); font-weight: 700;">
+          RuPay Platinum Debit Card
+        </span>
+        <a href="{{ url_for('cards') }}" style="font-size: 0.78rem; color: var(--brand-primary); font-weight: 600;">Manage &rarr;</a>
+      </div>
+
+      {% if primary_card %}
+      <div class="debit-card-wrapper">
+        <div class="debit-card">
+          {% if primary_card.status == 'frozen' %}
+          <div class="card-frozen-overlay">
+            <div class="frozen-stamp">CARD BLOCKED</div>
+            <div style="font-size: 0.72rem; color: #cbd5e1;">Unblock via Card Settings</div>
+          </div>
+          {% endif %}
+
+          <div class="card-top-row">
+            <div class="chip-and-contactless">
+              <div class="card-chip"></div>
+              <span style="font-size: 0.75rem; color: rgba(255,255,255,0.8); font-weight: 500;">Debit</span>
+            </div>
+            <div class="card-bank-name">NEOBANK</div>
+          </div>
+
+          <div class="card-middle-row">
+            <div class="card-number-display">
+              &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; {{ primary_card.card_number[-4:] }}
+            </div>
+          </div>
+
+          <div class="card-bottom-row">
+            <div>
+              <div class="card-meta-label">Cardholder</div>
+              <div class="card-meta-value">{{ primary_card.cardholder_name }}</div>
+            </div>
+            <div>
+              <div class="card-meta-label">Valid Thru</div>
+              <div class="card-meta-value mono-num">{{ primary_card.expiry_date }}</div>
+            </div>
+            <div class="card-network-logo">RuPay</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-size: 0.78rem;">
+        <span style="color: var(--text-tertiary);">Daily Limit: <strong>₹{{ '{:,.0f}'.format(primary_card.daily_limit) }}</strong></span>
+        <span class="badge {% if primary_card.status == 'active' %}badge-success{% else %}badge-danger{% endif %}">
+          {{ primary_card.status.capitalize() }}
+        </span>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Active Loan Card -->
+    {% if active_loans %}
+      {% set l = active_loans[0] %}
+      <div class="card" style="border-left: 3px solid var(--brand-primary);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+          <div>
+            <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--brand-primary); font-weight: 700;">
+              Active Loan Facility
+            </div>
+            <div style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem; margin-top: 2px;">{{ l.purpose }}</div>
+          </div>
+          <span class="badge badge-info">{{ l.interest_rate }}% p.a.</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0;">
+          <div>
+            <div style="font-size: 0.72rem; color: var(--text-tertiary);">Monthly EMI</div>
+            <div class="mono-num maskable-balance" style="font-size: 1.1rem; font-weight: 700; color: var(--brand-primary);">{{ l.monthly_emi | currency }}</div>
+          </div>
+          <div>
+            <div style="font-size: 0.72rem; color: var(--text-tertiary);">Outstanding</div>
+            <div class="mono-num maskable-balance" style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">{{ l.remaining_amount | currency }}</div>
+          </div>
+        </div>
+
+        <div class="progress-bar-container" style="margin-bottom: 14px;">
+          <div class="progress-bar-fill" style="width: {{ l.progress_percentage }}%;"></div>
+        </div>
+
+        <form method="POST" action="{{ url_for('pay_loan_installment', loan_id=l.id) }}">
+          <input type="hidden" name="pay_amount" value="{{ l.monthly_emi }}">
+          <button type="submit" class="btn btn-secondary btn-sm" style="width: 100%;">
+            Pay EMI ({{ l.monthly_emi | currency }}) &rarr;
+          </button>
+        </form>
+      </div>
+    {% else %}
+      <div class="card" style="text-align: center; padding: 20px;">
+        <div style="font-weight: 600; color: var(--text-primary); font-size: 0.92rem;">Pre-Approved Personal Loan</div>
+        <p style="font-size: 0.78rem; color: var(--text-tertiary); margin: 6px 0 14px;">Borrow up to ₹10,00,000 at competitive rates starting 8.5% p.a.</p>
+        <a href="{{ url_for('loans') }}" class="btn btn-secondary btn-sm" style="width: 100%;">
+          View Loan Calculator &rarr;
+        </a>
+      </div>
+    {% endif %}
+
+    <!-- Frequent Beneficiaries -->
+    <div class="card">
+      <div class="card-header" style="margin-bottom: 12px;">
+        <h2 class="card-title" style="font-size: 0.92rem;">Frequent Payees</h2>
+        <a href="{{ url_for('transfer') }}" style="font-size: 0.78rem; color: var(--brand-primary); font-weight: 600;">+ Transfer</a>
+      </div>
+
+      {% if beneficiaries %}
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          {% for ben in beneficiaries %}
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: var(--radius-sm); background: var(--bg-surface-elevated);">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="width: 28px; height: 28px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; color: var(--brand-primary);">
+                {{ ben.name[:2].upper() }}
+              </div>
+              <div>
+                <div style="font-size: 0.82rem; font-weight: 600; color: var(--text-primary);">{{ ben.name }}</div>
+                <div style="font-size: 0.7rem; color: var(--text-tertiary); font-family: var(--font-mono);">#{{ ben.account_number[-4:] }}</div>
+              </div>
+            </div>
+            <a href="{{ url_for('transfer') }}?to={{ ben.account_number }}" class="btn btn-secondary btn-sm" style="padding: 3px 8px; font-size: 0.72rem;">
+              Pay
+            </a>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div style="text-align: center; color: var(--text-tertiary); font-size: 0.78rem; padding: 10px;">
+          No frequent payees saved yet.
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

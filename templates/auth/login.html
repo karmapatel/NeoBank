@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In | NeoBank Internet Banking{% endblock %}
+
+{% block auth_content %}
+<div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; background: #f8fafc;">
+  <div style="width: 100%; max-width: 420px;">
+    
+    <!-- Branding Header -->
+    <div style="text-align: center; margin-bottom: 24px;">
+      <div style="width: 44px; height: 44px; background: #1d4ed8; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; color: #ffffff; font-weight: 700; font-size: 1.3rem; margin-bottom: 12px;">
+        N
+      </div>
+      <h2 style="font-size: 1.45rem; font-weight: 700; color: #0f172a;">NeoBank Internet Banking</h2>
+      <p style="color: #64748b; font-size: 0.85rem; margin-top: 4px;">Secure Personal & Business Banking Portal</p>
+    </div>
+
+    <!-- Login Card -->
+    <div class="card" style="box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); padding: 28px;">
+      <form method="POST" action="{{ url_for('login') }}">
+        <div class="form-group">
+          <label class="form-label" for="identifier">Username, Email, or Account #</label>
+          <input type="text" id="identifier" name="identifier" class="form-control" placeholder="e.g. alex.mercer or 4820-9182-34" required autofocus>
+        </div>
+
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label class="form-label" for="password" style="margin-bottom: 0;">Password</label>
+            <span style="font-size: 0.78rem; color: #1d4ed8; cursor: pointer;" onclick="showToast('Password reset assistance initiated', 'info')">Forgot Password?</span>
+          </div>
+          <input type="password" id="password" name="password" class="form-control" placeholder="Enter password" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 11px; font-size: 0.92rem; margin-top: 8px;">
+          Log In to NeoBank &rarr;
+        </button>
+      </form>
+
+      <!-- 1-Click Demo Fillers -->
+      <div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid #e2e8f0;">
+        <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: #64748b; font-weight: 700; margin-bottom: 10px; text-align: center;">
+          Demo Accounts (Pre-Loaded INR Balances)
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <button type="button" class="btn btn-secondary btn-sm" style="justify-content: space-between; text-align: left; padding: 9px 12px;" onclick="fillDemo('alex.mercer', 'password123')">
+            <div>
+              <div style="font-weight: 600; color: #0f172a; font-size: 0.82rem;">Alexander Mercer</div>
+              <div style="font-size: 0.72rem; color: #1d4ed8; font-family: var(--font-mono);">₹1,42,500 Checking &bull; Loans &bull; Goals</div>
+            </div>
+            <span style="font-size: 0.75rem; color: #64748b;">Fill &rarr;</span>
+          </button>
+
+          <button type="button" class="btn btn-secondary btn-sm" style="justify-content: space-between; text-align: left; padding: 9px 12px;" onclick="fillDemo('sarah.chen', 'password123')">
+            <div>
+              <div style="font-weight: 600; color: #0f172a; font-size: 0.82rem;">Sarah Chen</div>
+              <div style="font-size: 0.72rem; color: #047857; font-family: var(--font-mono);">₹98,400 Checking &bull; RuPay Card</div>
+            </div>
+            <span style="font-size: 0.75rem; color: #64748b;">Fill &rarr;</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Registration Link -->
+    <div style="text-align: center; margin-top: 20px; font-size: 0.85rem; color: #64748b;">
+      Don't have an account? 
+      <a href="{{ url_for('register') }}" style="color: #1d4ed8; font-weight: 600;">Open a New Account</a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function fillDemo(username, pwd) {
+  document.getElementById('identifier').value = username;
+  document.getElementById('password').value = pwd;
+  showToast('Credentials filled. Click "Log In" to proceed.', 'info');
+}
+</script>
+{% endblock %}

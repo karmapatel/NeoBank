@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}Deposit & Withdraw | NeoBank{% endblock %}
+{% block page_title %}Funds Deposit & Withdrawal{% endblock %}
+
+{% block content %}
+<div class="tabs-wrapper" style="max-width: 640px; margin: 0 auto;">
+
+  <!-- Tab Navigation -->
+  <div class="tabs-nav">
+    <button type="button" class="tab-btn {% if active_tab == 'deposit' %}active{% endif %}" data-target="tab-deposit">
+      Deposit Funds
+    </button>
+    <button type="button" class="tab-btn {% if active_tab == 'withdraw' %}active{% endif %}" data-target="tab-withdraw">
+      Withdraw Funds
+    </button>
+  </div>
+
+  <!-- Deposit Pane -->
+  <div id="tab-deposit" class="tab-pane" style="display: {% if active_tab == 'deposit' %}block{% else %}none{% endif %};">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">Electronic Deposit</h2>
+          <div class="card-subtitle">Credit funds directly into your account</div>
+        </div>
+        <span class="badge badge-success">Instant Credit</span>
+      </div>
+
+      <form method="POST" action="{{ url_for('deposit') }}">
+        <div class="form-group">
+          <label class="form-label" for="deposit_account">Destination Account</label>
+          <select id="deposit_account" name="account_id" class="form-control">
+            {% for acc in user.accounts %}
+            <option value="{{ acc.id }}">
+              {{ acc.account_type.capitalize() }} ({{ acc.formatted_number }}) &bull; Balance: {{ acc.balance | currency }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="deposit_amount">Deposit Amount (₹ INR)</label>
+          <input type="number" id="deposit_amount" name="amount" class="form-control mono-num" placeholder="0.00" step="any" min="0.01" required style="font-size: 1.15rem; font-weight: 600;">
+          
+          <div class="quick-amounts">
+            <button type="button" class="amount-chip" data-target="deposit_amount" data-amount="1000">+₹1,000</button>
+            <button type="button" class="amount-chip" data-target="deposit_amount" data-amount="5000">+₹5,000</button>
+            <button type="button" class="amount-chip" data-target="deposit_amount" data-amount="10000">+₹10,000</button>
+            <button type="button" class="amount-chip" data-target="deposit_amount" data-amount="25000">+₹25,000</button>
+            <button type="button" class="amount-chip" data-target="deposit_amount" data-amount="50000">+₹50,000</button>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="deposit_category">Category</label>
+            <select id="deposit_category" name="category" class="form-control">
+              <option value="Direct Deposit">NEFT / RTGS Credit</option>
+              <option value="Salary">Salary / Professional Fee</option>
+              <option value="Client Consulting">Client Invoice Payment</option>
+              <option value="Investment Returns">Mutual Funds / Dividends</option>
+              <option value="General Deposit">Cash / Miscellaneous</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="deposit_description">Transaction Remark</label>
+            <input type="text" id="deposit_description" name="description" class="form-control" placeholder="e.g. Monthly salary deposit">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 10px; font-size: 0.92rem; margin-top: 6px;">
+          Process Deposit &rarr;
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Withdraw Pane -->
+  <div id="tab-withdraw" class="tab-pane" style="display: {% if active_tab == 'withdraw' %}block{% else %}none{% endif %};">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">Withdraw Funds</h2>
+          <div class="card-subtitle">Self cash draw or external disbursement</div>
+        </div>
+        <span class="badge badge-warning">PIN Required</span>
+      </div>
+
+      <form method="POST" action="{{ url_for('withdraw') }}">
+        <div class="form-group">
+          <label class="form-label" for="withdraw_account">Source Account</label>
+          <select id="withdraw_account" name="account_id" class="form-control">
+            {% for acc in user.accounts %}
+            <option value="{{ acc.id }}">
+              {{ acc.account_type.capitalize() }} ({{ acc.formatted_number }}) &bull; Balance: {{ acc.balance | currency }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="withdraw_amount">Withdrawal Amount (₹ INR)</label>
+          <input type="number" id="withdraw_amount" name="amount" class="form-control mono-num" placeholder="0.00" step="any" min="0.01" required style="font-size: 1.15rem; font-weight: 600;">
+          
+          <div class="quick-amounts">
+            <button type="button" class="amount-chip" data-target="withdraw_amount" data-amount="500">+₹500</button>
+            <button type="button" class="amount-chip" data-target="withdraw_amount" data-amount="2000">+₹2,000</button>
+            <button type="button" class="amount-chip" data-target="withdraw_amount" data-amount="5000">+₹5,000</button>
+            <button type="button" class="amount-chip" data-target="withdraw_amount" data-amount="10000">+₹10,000</button>
+            <button type="button" class="amount-chip" data-target="withdraw_amount" data-amount="25000">+₹25,000</button>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="withdraw_category">Category</label>
+            <select id="withdraw_category" name="category" class="form-control">
+              <option value="ATM / Cash">ATM Cash Draw</option>
+              <option value="Living Expenses">Household / Living Expenses</option>
+              <option value="Business Expenses">Business Disbursement</option>
+              <option value="Miscellaneous">Personal Draw</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="withdraw_pin">Security PIN</label>
+            <input type="password" id="withdraw_pin" name="transaction_pin" class="form-control mono-num" placeholder="Default: 1234" maxlength="4" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="withdraw_description">Remark / Purpose</label>
+          <input type="text" id="withdraw_description" name="description" class="form-control" placeholder="e.g. Travel emergency funds">
+        </div>
+
+        <button type="submit" class="btn btn-secondary" style="width: 100%; padding: 10px; font-size: 0.92rem; margin-top: 6px; color: var(--status-danger-text); border-color: var(--status-danger-border);">
+          Authorize Withdrawal &rarr;
+        </button>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

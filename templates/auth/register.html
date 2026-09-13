@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Open a Bank Account | NeoBank{% endblock %}
+
+{% block auth_content %}
+<div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; background: #f8fafc;">
+  <div style="width: 100%; max-width: 520px;">
+    
+    <!-- Header -->
+    <div style="text-align: center; margin-bottom: 24px;">
+      <div style="width: 44px; height: 44px; background: #1d4ed8; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; color: #ffffff; font-weight: 700; font-size: 1.3rem; margin-bottom: 12px;">
+        N
+      </div>
+      <h2 style="font-size: 1.45rem; font-weight: 700; color: #0f172a;">Open NeoBank Account</h2>
+      <p style="color: #64748b; font-size: 0.85rem; margin-top: 4px;">Zero minimum balance &bull; Instant RuPay Platinum Debit Card &bull; High Interest</p>
+    </div>
+
+    <!-- Registration Card -->
+    <div class="card" style="box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); padding: 28px;">
+      <form method="POST" action="{{ url_for('register') }}">
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="full_name">Customer Full Name</label>
+            <input type="text" id="full_name" name="full_name" class="form-control" placeholder="e.g. Rahul Sharma" required autofocus>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="username">Username</label>
+            <input type="text" id="username" name="username" class="form-control" placeholder="e.g. rahul.sharma" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="email">Email Address</label>
+            <input type="email" id="email" name="email" class="form-control" placeholder="rahul@example.in" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="phone">Mobile Number</label>
+            <input type="tel" id="phone" name="phone" class="form-control" placeholder="+91 98000 00000">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="account_type">Account Scheme</label>
+            <select id="account_type" name="account_type" class="form-control">
+              <option value="checking">Salary / Current Account</option>
+              <option value="savings">Savings Account (6.5% p.a.)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="initial_deposit">Initial Deposit (₹ INR)</label>
+            <input type="number" id="initial_deposit" name="initial_deposit" class="form-control mono-num" placeholder="0.00" step="any" min="0" value="5000.00">
+          </div>
+        </div>
+
+        <div style="margin-bottom: 18px; padding: 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-sm);">
+          <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; margin-bottom: 0;">
+            <input type="checkbox" name="also_open_savings" value="yes" checked style="width: 16px; height: 16px; margin-top: 2px; accent-color: var(--brand-primary);">
+            <div>
+              <div style="font-size: 0.84rem; font-weight: 600; color: #1e3a8a;">Also create a linked High-Yield Savings Account (Recommended)</div>
+              <div style="font-size: 0.74rem; color: #2563eb; margin-top: 1px;">Start with 2 accounts immediately: Premier Checking + 6.5% p.a. Savings with bonus.</div>
+            </div>
+          </label>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="password">Login Password</label>
+            <input type="password" id="password" name="password" class="form-control" placeholder="Min. 6 characters" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="confirm_password">Confirm Password</label>
+            <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Repeat password" required>
+          </div>
+        </div>
+
+        <div style="background: #f1f5f9; padding: 12px; border-radius: var(--radius-sm); border: 1px solid #e2e8f0; margin-bottom: 18px; font-size: 0.78rem; color: #475569; display: flex; align-items: flex-start; gap: 8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2" style="flex-shrink: 0; margin-top: 1px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          <div>
+            A 10-digit account number and virtual RuPay debit card will be generated immediately with a default security PIN of <strong>1234</strong>.
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 11px; font-size: 0.92rem;">
+          Submit Application &rarr;
+        </button>
+      </form>
+    </div>
+
+    <!-- Login Link -->
+    <div style="text-align: center; margin-top: 20px; font-size: 0.85rem; color: #64748b;">
+      Already an existing customer? 
+      <a href="{{ url_for('login') }}" style="color: #1d4ed8; font-weight: 600;">Sign In Here</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

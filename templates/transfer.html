@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block title %}Funds Transfer | NeoBank{% endblock %}
+{% block page_title %}Inter-Account & P2P Transfer{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 24px; max-width: 1040px; margin: 0 auto; align-items: start;">
+
+  <!-- Transfer Form Card -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">IMPS / Internal Transfer</h2>
+        <div class="card-subtitle">Zero fee real-time settlement 24x7</div>
+      </div>
+      <span class="badge badge-success">IMPS Active</span>
+    </div>
+
+    <form method="POST" action="{{ url_for('transfer') }}">
+      
+      <div class="form-group">
+        <label class="form-label" for="source_account_id">Debit From Account</label>
+        <select id="source_account_id" name="source_account_id" class="form-control">
+          {% for acc in user.accounts %}
+          <option value="{{ acc.id }}">
+            {{ acc.account_type.capitalize() }} ({{ acc.formatted_number }}) &bull; Available: {{ acc.balance | currency }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <label class="form-label" for="recipient_account" style="margin-bottom: 0;">Beneficiary Account # or Username</label>
+          <span style="font-size: 0.72rem; color: var(--text-tertiary);">NeoBank Network</span>
+        </div>
+        <input type="text" id="recipient_account" name="recipient_account" class="form-control mono-num" placeholder="e.g. 5928109244 or sarah.chen" value="{{ request.args.get('to', '') }}" required>
+        <div id="recipient-feedback"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="amount">Transfer Amount (₹ INR)</label>
+        <input type="number" id="amount" name="amount" class="form-control mono-num" placeholder="0.00" step="any" min="0.01" required style="font-size: 1.2rem; font-weight: 600;">
+        
+        <div class="quick-amounts">
+          <button type="button" class="amount-chip" data-target="amount" data-amount="500">+₹500</button>
+          <button type="button" class="amount-chip" data-target="amount" data-amount="2000">+₹2,000</button>
+          <button type="button" class="amount-chip" data-target="amount" data-amount="5000">+₹5,000</button>
+          <button type="button" class="amount-chip" data-target="amount" data-amount="10000">+₹10,000</button>
+          <button type="button" class="amount-chip" data-target="amount" data-amount="25000">+₹25,000</button>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="note">Payment Remark / Memo</label>
+          <input type="text" id="note" name="note" class="form-control" placeholder="e.g. Rent, consulting fees">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="transaction_pin">Transaction PIN</label>
+          <input type="password" id="transaction_pin" name="transaction_pin" class="form-control mono-num" placeholder="Default: 1234" maxlength="4" required>
+        </div>
+      </div>
+
+      <!-- Save Beneficiary Option -->
+      <div style="background: var(--bg-surface-elevated); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 20px;">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.84rem; color: var(--text-primary);">
+          <input type="checkbox" name="save_beneficiary" value="1" id="save_beneficiary" style="accent-color: var(--brand-primary); width: 15px; height: 15px;">
+          <span>Save this payee to frequent beneficiaries</span>
+        </label>
+        <div id="nickname_container" style="margin-top: 8px;">
+          <input type="text" name="beneficiary_nickname" class="form-control" placeholder="Optional Nickname (e.g. Sarah Architect)">
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; padding: 11px; font-size: 0.92rem;">
+        Authorize & Send Transfer &rarr;
+      </button>
+    </form>
+  </div>
+
+  <!-- Right Side: Saved Beneficiaries Directory -->
+  <div style="display: flex; flex-direction: column; gap: 18px;">
+    
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title" style="font-size: 0.95rem;">Saved Beneficiaries</h2>
+        <span class="badge badge-neutral">{{ beneficiaries | length }} Saved</span>
+      </div>
+
+      {% if beneficiaries %}
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          {% for ben in beneficiaries %}
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--bg-surface-elevated); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 32px; height: 32px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--brand-primary); font-size: 0.8rem;">
+                {{ ben.name[:2].upper() }}
+              </div>
+              <div>
+                <div style="font-weight: 600; color: var(--text-primary); font-size: 0.85rem;">{{ ben.name }}</div>
+                <div style="font-size: 0.7rem; color: var(--text-tertiary); font-family: var(--font-mono);">
+                  #{{ ben.account_number }} {% if ben.nickname %}&bull; {{ ben.nickname }}{% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="selectBeneficiary('{{ ben.account_number }}')">
+                Select
+              </button>
+              <form method="POST" action="{{ url_for('delete_beneficiary', id=ben.id) }}" onsubmit="return confirm('Remove payee?');">
+                <button type="submit" class="btn btn-sm" style="color: var(--text-muted); background: transparent; border: none; font-size: 1.1rem; padding: 2px 6px;" title="Delete">
+                  &times;
+                </button>
+              </form>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div style="text-align: center; color: var(--text-tertiary); padding: 20px; font-size: 0.82rem;">
+          No frequent payees saved yet.
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Quick Tip -->
+    <div class="card" style="background: var(--brand-light); border-color: var(--status-info-border);">
+      <div style="display: flex; gap: 10px; align-items: flex-start;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)" stroke-width="2" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        <div>
+          <div style="font-weight: 600; color: var(--text-primary); font-size: 0.84rem;">Instant Transfer Demo Payees</div>
+          <p style="font-size: 0.76rem; color: var(--text-secondary); margin-top: 4px; line-height: 1.4;">
+            Try transferring to <strong>sarah.chen</strong> (<code style="font-family: var(--font-mono);">5928-1092-44</code>) or <strong>marcus.vance</strong> (<code style="font-family: var(--font-mono);">3910-8274-11</code>).
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+function selectBeneficiary(accNum) {
+  const input = document.getElementById('recipient_account');
+  input.value = accNum;
+  input.dispatchEvent(new Event('input'));
+  document.getElementById('amount').focus();
+  showToast(`Selected payee account #${accNum}`, 'info');
+}
+</script>
+{% endblock %}

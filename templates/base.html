@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}NeoBank | High-Caliber Digital Banking{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300E599'><path d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/></svg>">
+</head>
+<body>
+  {% if current_user %}
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand-logo">
+        <div class="brand-symbol">N</div>
+        <div class="brand-text">
+          <span class="brand-name">NeoBank</span>
+          <span class="brand-tag">Digital Banking</span>
+        </div>
+      </div>
+
+      <nav class="nav-section">
+        <div class="nav-section-title">Core Banking</div>
+        <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect></svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="{{ url_for('accounts_hub') }}" class="nav-item {% if request.endpoint in ['accounts_hub', 'account_detail', 'open_account'] %}active{% endif %}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+          <span>My Accounts</span>
+        </a>
+        <a href="{{ url_for('deposit') }}" class="nav-item {% if request.endpoint in ['deposit', 'withdraw'] %}active{% endif %}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          <span>Deposit & Withdraw</span>
+        </a>
+        <a href="{{ url_for('transfer') }}" class="nav-item {% if request.endpoint == 'transfer' %}active{% endif %}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+          <span>Transfer Funds</span>
+        </a>
+        <a href="{{ url_for('transactions') }}" class="nav-item {% if request.endpoint == 'transactions' %}active{% endif %}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+          <span>Ledger & Statement</span>
+        </a>
+
+        <div class="nav-section-title" style="margin-top: 14px;">Products & Tools</div>
+        <a href="{{ url_for('loans') }}" class="nav-item {% if request.endpoint in ['loans', 'apply_loan'] %}active{% endif %}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+          <span>Credit & Loans</span>
+        </a>
+        <a href="{{ url_for('cards') }}" class="nav-item {% if request.endpoint == 'cards' %}active{% endif %}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+          <span>Virtual Cards</span>
+        </a>
+        <a href="{{ url_for('vaults') }}" class="nav-item {% if request.endpoint == 'vaults' %}active{% endif %}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+          <span>Savings Vaults</span>
+        </a>
+        <a href="{{ url_for('profile') }}" class="nav-item {% if request.endpoint == 'profile' %}active{% endif %}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          <span>Security & Profile</span>
+        </a>
+      </nav>
+
+      <!-- Sidebar User Footer -->
+      <div class="sidebar-user">
+        <div class="user-avatar">{{ current_user.full_name[:2].upper() }}</div>
+        <div class="user-meta">
+          <span class="user-meta-name">{{ current_user.full_name }}</span>
+          <span class="user-meta-account" style="cursor:pointer;" title="Click to copy account number" data-copy="{{ current_user.primary_account.account_number if current_user.primary_account else '' }}">
+            #{{ current_user.primary_account.formatted_number if current_user.primary_account else '---' }}
+          </span>
+        </div>
+        <a href="{{ url_for('logout') }}" title="Sign Out" style="color:var(--text-tertiary); display:flex; align-items:center;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+      <!-- Topbar Header -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1 class="page-title">{% block page_title %}Overview{% endblock %}</h1>
+        </div>
+
+        <div class="topbar-right">
+          <!-- Balance Privacy Toggle Button -->
+          <button id="privacy-toggle-btn" class="privacy-toggle-btn" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            <span class="toggle-label">Hide Balances</span>
+          </button>
+
+          <!-- 12 AM Auto-Banking Engine Status & Quick Simulation Trigger -->
+          <button id="run-auto-cycle-btn" class="privacy-toggle-btn" type="button" title="Autonomous 12:00 AM Engine: Credits daily interest & auto-debits active loan EMIs. Click to test / trigger cycle now." style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981; box-shadow:0 0 8px rgba(16,185,129,0.6);"></span>
+            <span style="font-weight:600; font-size:0.78rem; color:var(--text-secondary);">⚡ 12 AM Auto-Cycle</span>
+          </button>
+
+          <!-- NeoBank Status Indicator -->
+          <div class="status-badge-live">
+            <div class="status-dot"></div>
+            <span>IMPS / UPI 24x7</span>
+          </div>
+
+          <a href="{{ url_for('transfer') }}" class="btn btn-primary btn-sm">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span>Send Money</span>
+          </a>
+        </div>
+      </header>
+
+      <!-- Content Area -->
+      <main class="content-area">
+        <!-- Flash Messaging -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-container">
+              {% for category, message in messages %}
+                <div class="flash-alert {{ category }}">
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    {% if category == 'success' %}
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    {% elif category == 'error' %}
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                    {% else %}
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    {% endif %}
+                    <span>{{ message }}</span>
+                  </div>
+                  <button type="button" class="alert-close" onclick="this.parentElement.remove();">&times;</button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+  {% else %}
+  <!-- Public Layout for Auth pages -->
+  <div class="auth-layout">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-container" style="max-width: 480px; margin: 24px auto 0;">
+          {% for category, message in messages %}
+            <div class="flash-alert {{ category }}">
+              <span>{{ message }}</span>
+              <button type="button" class="alert-close" onclick="this.parentElement.remove();">&times;</button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block auth_content %}{% endblock %}
+  </div>
+  {% endif %}
+
+  <div id="toast-container" class="toast-container"></div>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

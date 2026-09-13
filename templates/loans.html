@@ -1,0 +1,375 @@
+{% extends 'base.html' %}
+
+{% block title %}Loans & Credit Facility | NeoBank{% endblock %}
+{% block page_title %}Loan Facilities & EMI Calculator{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: 28px;">
+
+  <!-- 1. Full-Width Category Selector Card (Spacious, airy tabs) -->
+  <div class="card" style="padding: 24px 28px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;">
+      <div>
+        <div style="font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--brand-primary); font-weight: 700; margin-bottom: 4px;">
+          Tailored Banking Facilities
+        </div>
+        <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0;">
+          Select Loan Category
+        </h2>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span class="badge badge-neutral" style="font-size: 0.72rem;">Zero Collateral (Personal & Auto)</span>
+        <span class="badge badge-success" style="font-size: 0.72rem;">Instant Sanction</span>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px;" id="category-selector-group">
+      <button type="button" class="category-card-btn category-select-btn {% if selected_category == 'home' %}btn-primary active{% endif %}" data-category="home">
+        <span class="cat-icon">🏠</span>
+        <span class="cat-title">Home Loan</span>
+        <span class="cat-amount">Up to ₹1.5 Cr</span>
+        <span class="cat-meta">Tenure: 25 Yrs • 8.40% p.a.</span>
+      </button>
+
+      <button type="button" class="category-card-btn category-select-btn {% if selected_category == 'auto' %}btn-primary active{% endif %}" data-category="auto">
+        <span class="cat-icon">🚗</span>
+        <span class="cat-title">Car & Vehicle</span>
+        <span class="cat-amount">Up to ₹40 Lakh</span>
+        <span class="cat-meta">Tenure: 7 Yrs • 8.75% p.a.</span>
+      </button>
+
+      <button type="button" class="category-card-btn category-select-btn {% if selected_category == 'business' %}btn-primary active{% endif %}" data-category="business">
+        <span class="cat-icon">💼</span>
+        <span class="cat-title">Business Loan</span>
+        <span class="cat-amount">Up to ₹75 Lakh</span>
+        <span class="cat-meta">Tenure: 10 Yrs • 9.75% p.a.</span>
+      </button>
+
+      <button type="button" class="category-card-btn category-select-btn {% if selected_category == 'education' %}btn-primary active{% endif %}" data-category="education">
+        <span class="cat-icon">🎓</span>
+        <span class="cat-title">Higher Education</span>
+        <span class="cat-amount">Up to ₹50 Lakh</span>
+        <span class="cat-meta">Tenure: 15 Yrs • 8.50% p.a.</span>
+      </button>
+
+      <button type="button" class="category-card-btn category-select-btn {% if selected_category == 'personal' %}btn-primary active{% endif %}" data-category="personal">
+        <span class="cat-icon">👤</span>
+        <span class="cat-title">Personal Loan</span>
+        <span class="cat-amount">Up to ₹25 Lakh</span>
+        <span class="cat-meta">Tenure: 5 Yrs • 7.50% p.a.</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 2. Main Two-Column Interactive Calculator & Application -->
+  <div style="display: grid; grid-template-columns: 1.35fr 1fr; gap: 28px; align-items: start;">
+    
+    <!-- Left: Loan Parameters & Applicant Credentials Card -->
+    <div class="card" style="padding: 26px 28px;">
+      <div class="card-header" style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border-subtle);">
+        <div>
+          <h2 class="card-title" id="calculator-section-title" style="font-size: 1.15rem;">Loan Parameters & Underwriting</h2>
+          <div class="card-subtitle">Adjust borrowing amount, tenure, and income credentials for real-time sanctioning</div>
+        </div>
+        <span id="underwriting-tier-badge" class="badge badge-success" style="font-size: 0.76rem;">{{ eligibility.tier if eligibility else 'Super Prime' }}</span>
+      </div>
+
+      <!-- Applicant Credentials Row -->
+      <div style="margin-bottom: 24px;">
+        <div style="font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); font-weight: 700; margin-bottom: 12px;">
+          Applicant Underwriting Profile
+        </div>
+
+        <div class="form-row" style="margin-bottom: 14px;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label class="form-label" for="credit_score_input" style="margin-bottom: 0; font-size: 0.84rem;">CIBIL Credit Score</label>
+              <span id="cibil-score-tag" class="badge badge-success" style="font-size: 0.68rem;">Verified Score</span>
+            </div>
+            <input type="number" id="credit_score_input" name="credit_score" class="form-control mono-num" min="300" max="900" value="{{ user.credit_score or 760 }}" style="font-weight: 700; font-size: 1.1rem; height: 42px;" required>
+            <div style="font-size: 0.72rem; color: var(--text-tertiary); margin-top: 4px;">Mandatory min. 600 required for sanctioning.</div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label class="form-label" for="monthly_income_input" style="margin-bottom: 0; font-size: 0.84rem;">Monthly Net Income (₹ INR)</label>
+              <span id="income-multiplier-tag" class="badge badge-info" style="font-size: 0.68rem;">{{ eligibility.multiplier | int if eligibility else 60 }}x Multiplier</span>
+            </div>
+            <input type="number" id="monthly_income_input" name="monthly_income" class="form-control mono-num" min="10000" step="1000" value="{{ (user.monthly_income or 75000) | int }}" style="font-weight: 700; font-size: 1.1rem; height: 42px;" required>
+            <div style="font-size: 0.72rem; color: var(--text-tertiary); margin-top: 4px;">Baseline min. ₹20,000 monthly verified net salary.</div>
+          </div>
+        </div>
+
+        <!-- Maximum Eligible Amount Banner -->
+        <div style="padding: 14px 18px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 0.76rem; color: #166534; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Maximum Eligible Borrowing Limit</div>
+            <div style="font-size: 0.75rem; color: #15803d; margin-top: 2px;">Tailored for <strong id="category-name-limit-hint">{{ eligibility.category_name if eligibility else 'Home Loan' }}</strong></div>
+          </div>
+          <span id="max-allowed-amount-display" class="mono-num" style="font-size: 1.35rem; font-weight: 800; color: #15803d;">
+            {{ eligibility.max_amount | currency if eligibility else '₹45,00,000.00' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Sliders for Borrowing Amount & Tenure -->
+      <div class="loan-slider-container">
+        <div style="font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); font-weight: 700; margin-bottom: 18px;">
+          Customize Loan Amount & Repayment Period
+        </div>
+        
+        <!-- Amount Slider -->
+        <div style="margin-bottom: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+            <span style="font-size: 0.86rem; font-weight: 600; color: var(--text-secondary);">Desired Loan Amount</span>
+            <span id="calc-amount-display" class="mono-num" style="font-size: 1.4rem; font-weight: 800; color: var(--brand-primary);">₹25,00,000</span>
+          </div>
+          <input type="range" id="loan-amount-slider" min="{{ eligibility.min_amount or 50000 }}" max="{{ (eligibility.max_amount or 4500000) | int }}" step="25000" value="{{ 2500000 if (eligibility.max_amount or 4500000) >= 2500000 else (eligibility.max_amount or 4500000) | int }}" style="width: 100%; accent-color: var(--brand-primary); cursor: pointer; height: 6px;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.74rem; color: var(--text-tertiary); margin-top: 6px;">
+            <span id="slider-min-hint">Min: {{ (eligibility.min_amount or 50000) | currency }}</span>
+            <span id="slider-max-hint" style="font-weight: 600; color: var(--text-secondary);">Max Cap: {{ eligibility.max_amount | currency if eligibility else '₹45,00,000.00' }}</span>
+          </div>
+        </div>
+
+        <!-- Tenure Slider -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+            <span style="font-size: 0.86rem; font-weight: 600; color: var(--text-secondary);">Repayment Tenure</span>
+            <span id="calc-term-display" class="mono-num" style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary);">240 Months (20 Years)</span>
+          </div>
+          <input type="range" id="loan-term-slider" min="{{ eligibility.min_tenure_months or 24 }}" max="{{ eligibility.max_tenure_months or 300 }}" step="6" value="{{ 240 if (eligibility.max_tenure_months or 300) >= 240 else (eligibility.max_tenure_months or 300) }}" style="width: 100%; accent-color: var(--brand-primary); cursor: pointer; height: 6px;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.74rem; color: var(--text-tertiary); margin-top: 6px;">
+            <span id="slider-min-term-hint">{{ eligibility.min_tenure_months or 24 }} Months ({{ (eligibility.min_tenure_months or 24) // 12 }} Yrs)</span>
+            <span id="slider-max-term-hint" style="font-weight: 600; color: var(--text-secondary);">{{ eligibility.max_tenure_months or 300 }} Months ({{ (eligibility.max_tenure_months or 300) // 12 }} Years)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ineligibility Warning Box -->
+      <div id="ineligibility-warning" style="display: none; background: #fef2f2; border: 1px solid #fecaca; border-radius: var(--radius-md); padding: 14px; margin-bottom: 20px; font-size: 0.84rem; color: #b91c1c;">
+        <div style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          Application Criteria Not Met
+        </div>
+        <span id="ineligibility-reason-text">Credit score is below the minimum threshold.</span>
+      </div>
+
+      <!-- Application Form -->
+      <form method="POST" action="{{ url_for('apply_loan') }}" id="loanApplicationForm">
+        <input type="hidden" id="loan-form-category" name="category" value="{{ selected_category or 'home' }}">
+        <input type="hidden" id="loan-form-amount" name="amount" value="2500000">
+        <input type="hidden" id="loan-form-term" name="term_months" value="240">
+        <input type="hidden" id="loan-form-score" name="credit_score" value="{{ user.credit_score or 760 }}">
+        <input type="hidden" id="loan-form-income" name="monthly_income" value="{{ (user.monthly_income or 75000) | int }}">
+
+        <div class="form-group" style="margin-bottom: 18px;">
+          <label class="form-label" for="purpose" style="font-size: 0.85rem; font-weight: 600;">Loan Purpose & Utilization Plan</label>
+          <select id="purpose" name="purpose" class="form-control" style="height: 42px; font-size: 0.9rem;">
+            <option value="Home Purchase / Construction">New Flat / Home Purchase or Construction</option>
+            <option value="Home Renovation & Solar">Home Renovation, Extension & Rooftop Solar</option>
+            <option value="Plot & Villa Development">Residential Plot & Villa Development</option>
+            <option value="New Car / Electric Vehicle">New Passenger Car / Electric Vehicle (EV)</option>
+            <option value="Commercial Fleet / Transport">Commercial Transport / Fleet Vehicle</option>
+            <option value="Business Expansion & Working Capital">Business Scaling & Working Capital</option>
+            <option value="Machinery & Commercial Setup">Machinery, Tech & Commercial Setup</option>
+            <option value="Higher Education / Overseas Study">University Degree / Overseas Tuition</option>
+            <option value="Personal Liquidity / Medical Contingency">Personal Liquidity / Medical Emergency</option>
+          </select>
+        </div>
+
+        <div style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 14px 16px; border-radius: var(--radius-md); font-size: 0.8rem; color: #1e40af; margin-bottom: 22px; display: flex; align-items: center; gap: 10px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          <span>Underwritten sanction amount is credited directly to your primary checking account upon confirmation.</span>
+        </div>
+
+        <button type="submit" id="loan-submit-btn" class="btn btn-primary" style="width: 100%; padding: 13px; font-size: 0.96rem; font-weight: 600;">
+          Disburse Sanctioned Funds &rarr;
+        </button>
+      </form>
+    </div>
+
+    <!-- Right: Sticky Assessment & EMI Summary Card -->
+    <div class="card" style="position: sticky; top: 88px; border-top: 4px solid var(--brand-primary); padding: 26px 28px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div style="font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--brand-primary); font-weight: 700;">
+          Assessment & EMI Breakdown
+        </div>
+        <span id="summary-category-badge" class="badge badge-info" style="font-size: 0.72rem; padding: 4px 10px;">Home Loan</span>
+      </div>
+
+      <!-- Prominent Monthly EMI -->
+      <div style="background: #f8fafc; padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 20px; text-align: center;">
+        <div style="font-size: 0.76rem; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Estimated Monthly EMI</div>
+        <div id="calc-emi-display" class="mono-num" style="font-size: 2.2rem; font-weight: 800; color: var(--text-primary); margin: 6px 0;">
+          ₹9,076.00
+        </div>
+        <div style="display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <span id="calc-rate-display" class="badge badge-success" style="font-size: 0.75rem; font-weight: 700;">8.30% p.a.</span>
+          <span id="rate-breakdown-tag" style="font-size: 0.74rem; color: var(--text-tertiary);">Risk-adjusted interest</span>
+        </div>
+      </div>
+
+      <!-- Financial Metrics Rows -->
+      <div style="display: flex; flex-direction: column; gap: 12px; font-size: 0.86rem; border-top: 1px solid var(--border-subtle); padding-top: 18px; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--text-tertiary);">Max Eligible Limit</span>
+          <span id="summary-max-limit" class="mono-num" style="color: #059669; font-weight: 700; font-size: 0.95rem;">{{ eligibility.max_amount | currency if eligibility else '₹45,00,000.00' }}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--text-tertiary);">Total Interest Payable</span>
+          <span id="calc-interest-display" class="mono-num" style="color: var(--text-primary); font-weight: 600;">₹17,824.00</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--text-tertiary);">Total Amount to Repay</span>
+          <span id="calc-total-display" class="mono-num" style="color: var(--text-primary); font-weight: 600;">₹2,17,824.00</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--text-tertiary);">FOIR (Income Commitment)</span>
+          <span id="calc-foir-display" class="mono-num" style="color: var(--brand-primary); font-weight: 600;">12.1% of Income</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--text-tertiary);">Processing Fee</span>
+          <span style="color: var(--status-success-text); font-weight: 600;">₹0.00 (Waived)</span>
+        </div>
+      </div>
+
+      <!-- Key Benefits List -->
+      <div style="background: #ffffff; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="font-size: 0.74rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">NeoBank Advantage</div>
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--text-secondary);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>Instant loan credit into Checking Account</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--text-secondary);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>Prepay any extra lump sum with nominal 12.3% fee</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--text-secondary);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>Transparent CIBIL-linked interest pricing</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 3. Existing Active & Past Loans -->
+  <div class="card" style="padding: 26px 28px;">
+    <div class="card-header" style="margin-bottom: 22px;">
+      <div>
+        <h2 class="card-title" style="font-size: 1.15rem;">Existing Loan Accounts</h2>
+        <div class="card-subtitle">Active loan facilities & monthly repayment status</div>
+      </div>
+      <span class="badge badge-neutral" style="font-size: 0.76rem;">{{ loans | length }} Facilities</span>
+    </div>
+
+    {% if loans %}
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;">
+        {% for l in loans %}
+        <div style="background: var(--bg-surface-elevated); padding: 22px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="mono-num" style="font-size: 0.72rem; color: var(--text-tertiary);">{{ l.loan_reference }}</span>
+                  <span class="badge badge-secondary" style="font-size: 0.68rem; text-transform: uppercase; font-weight: 700;">{{ l.category.capitalize() if l.category else 'Personal' }} Loan</span>
+                </div>
+                <h3 style="font-size: 1.05rem; font-weight: 600; color: var(--text-primary); margin-top: 4px;">{{ l.purpose }}</h3>
+              </div>
+              <span class="badge {% if l.status == 'active' %}badge-info{% elif l.status == 'completed' %}badge-success{% else %}badge-neutral{% endif %}">
+                {{ l.status.capitalize() }}
+              </span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; padding: 12px; background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+              <div>
+                <div style="font-size: 0.72rem; color: var(--text-tertiary);">Sanctioned Amount</div>
+                <div class="mono-num maskable-balance" style="font-weight: 700; font-size: 1rem; color: var(--text-primary);">{{ l.amount | currency }}</div>
+              </div>
+              <div>
+                <div style="font-size: 0.72rem; color: var(--text-tertiary);">Monthly EMI</div>
+                <div class="mono-num maskable-balance" style="font-weight: 700; font-size: 1rem; color: var(--brand-primary);">{{ l.monthly_emi | currency }}</div>
+              </div>
+              <div>
+                <div style="font-size: 0.72rem; color: var(--text-tertiary);">Outstanding Balance</div>
+                <div class="mono-num maskable-balance" style="font-weight: 700; font-size: 1rem; color: var(--text-primary);">{{ l.remaining_amount | currency }}</div>
+              </div>
+              <div>
+                <div style="font-size: 0.72rem; color: var(--text-tertiary);">Interest Rate</div>
+                <div class="mono-num" style="font-weight: 700; font-size: 1rem; color: var(--text-primary);">{{ l.interest_rate }}% p.a.</div>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 16px;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.74rem; color: var(--text-tertiary); margin-bottom: 6px;">
+                <span>Repayment Progress</span>
+                <span class="mono-num" style="color: var(--text-primary); font-weight: 700;">{{ l.progress_percentage }}%</span>
+              </div>
+              <div class="progress-bar-container" style="height: 6px;">
+                <div class="progress-bar-fill" style="width: {{ l.progress_percentage }}%;"></div>
+              </div>
+            </div>
+          </div>
+
+          {% if l.status == 'active' %}
+          <div style="border-top: 1px solid var(--border-subtle); padding-top: 14px; margin-top: 10px;">
+            <!-- Regular EMI Action -->
+            <form method="POST" action="{{ url_for('pay_loan_installment', loan_id=l.id) }}" style="margin-bottom: 12px;">
+              <input type="hidden" name="payment_type" value="emi">
+              <input type="hidden" name="pay_amount" value="{{ l.monthly_emi }}">
+              <button type="submit" class="btn btn-secondary btn-sm" style="width: 100%; padding: 8px;">
+                Pay Regular EMI ({{ l.monthly_emi | currency }})
+              </button>
+            </form>
+
+            <!-- Extra Part-Payment / Prepayment Form with 12.3% Fee -->
+            <div style="background: #ffffff; border: 1px solid var(--border-medium); border-radius: var(--radius-sm); padding: 14px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-primary);">Extra Principal Prepayment</span>
+                <span class="badge badge-warning" style="font-size: 0.68rem;">12.3% Prepayment Fee</span>
+              </div>
+              <p style="font-size: 0.72rem; color: var(--text-tertiary); margin-bottom: 10px;">
+                Pay any extra lump sum to reduce loan principal and lower your monthly EMI.
+              </p>
+
+              <form method="POST" action="{{ url_for('pay_loan_installment', loan_id=l.id) }}">
+                <input type="hidden" name="payment_type" value="extra">
+                
+                <div style="display: grid; grid-template-columns: 1.3fr 1fr auto; gap: 8px; margin-bottom: 8px;">
+                  <input type="number" name="extra_amount" id="extra_input_{{ l.id }}" class="form-control form-control-sm mono-num" placeholder="Extra Amount (₹)" step="any" min="1" max="{{ l.remaining_amount }}" required style="font-size: 0.85rem; padding: 7px 10px;" oninput="updateExtraPreview({{ l.id }}, {{ l.interest_rate }}, {{ l.monthly_emi }}, {{ l.remaining_amount }})">
+                  <input type="number" name="tenure_months" id="tenure_input_{{ l.id }}" class="form-control form-control-sm mono-num" placeholder="Tenure (Mos)" min="1" max="360" value="{{ ((l.remaining_amount / l.monthly_emi) | round | int) if l.monthly_emi > 0 else l.term_months }}" title="Loan tenure in months to recalculate EMI" style="font-size: 0.85rem; padding: 7px 10px;" oninput="updateExtraPreview({{ l.id }}, {{ l.interest_rate }}, {{ l.monthly_emi }}, {{ l.remaining_amount }})">
+                  <button type="submit" class="btn btn-primary btn-sm" style="white-space: nowrap; padding: 7px 14px;">
+                    Pay Extra
+                  </button>
+                </div>
+
+                <!-- Real-time live fee breakdown & updated EMI preview -->
+                <div id="extra_preview_{{ l.id }}" style="font-size: 0.74rem; color: var(--text-secondary); background: var(--bg-surface-elevated); padding: 8px 10px; border-radius: 4px; display: none; line-height: 1.6;">
+                  <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px;">
+                    <span>Principal: <strong id="prev_principal_{{ l.id }}" class="mono-num">₹0.00</strong></span>
+                    <span>12.3% Fee: <strong id="prev_fee_{{ l.id }}" class="mono-num" style="color: var(--status-warning-text);">₹0.00</strong></span>
+                    <span>Total Debit: <strong id="prev_total_{{ l.id }}" class="mono-num" style="color: var(--brand-primary);">₹0.00</strong></span>
+                  </div>
+                  <div id="prev_new_emi_{{ l.id }}" style="margin-top: 4px; border-top: 1px dashed var(--border-subtle); padding-top: 4px; color: #047857; font-weight: 600;">
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+          {% else %}
+          <div style="padding: 10px; text-align: center; background: var(--status-success-bg); border-radius: var(--radius-sm); color: var(--status-success-text); font-weight: 600; font-size: 0.84rem;">
+            &check; Loan Account Closed (Fully Settled)
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div style="text-align: center; color: var(--text-tertiary); padding: 36px;">
+        No active loan facilities. Configure parameters above to apply for instant credit.
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

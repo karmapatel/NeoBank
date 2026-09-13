@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}Account Ledger & Statement | NeoBank{% endblock %}
+{% block page_title %}Account Ledger & Statement{% endblock %}
+
+{% block content %}
+<div class="card">
+  
+  <!-- Header with Filters & Actions -->
+  <div style="display: flex; flex-wrap: wrap; gap: 14px; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border-subtle);">
+    
+    <!-- Left Filter Pills -->
+    <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+      <a href="{{ url_for('transactions', type='all', category=current_category) }}" class="btn btn-sm {% if current_type == 'all' %}btn-primary{% else %}btn-secondary{% endif %}">
+        All Transactions
+      </a>
+      <a href="{{ url_for('transactions', type='deposit', category=current_category) }}" class="btn btn-sm {% if current_type == 'deposit' %}btn-primary{% else %}btn-secondary{% endif %}">
+        Deposits
+      </a>
+      <a href="{{ url_for('transactions', type='withdraw', category=current_category) }}" class="btn btn-sm {% if current_type == 'withdraw' %}btn-primary{% else %}btn-secondary{% endif %}">
+        Withdrawals
+      </a>
+      <a href="{{ url_for('transactions', type='transfer', category=current_category) }}" class="btn btn-sm {% if current_type == 'transfer' %}btn-primary{% else %}btn-secondary{% endif %}">
+        Transfers
+      </a>
+      <a href="{{ url_for('transactions', type='loan_payment', category=current_category) }}" class="btn btn-sm {% if current_type == 'loan_payment' %}btn-primary{% else %}btn-secondary{% endif %}">
+        Loan EMIs
+      </a>
+    </div>
+
+    <!-- Right Controls: Search & CSV Export -->
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+      <div style="position: relative; width: 220px;">
+        <input type="text" id="table-search-input" class="form-control" placeholder="Search particulars, ref ID..." value="{{ search_query }}" style="padding-left: 32px; padding-top: 6px; padding-bottom: 6px; font-size: 0.82rem;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      </div>
+
+      <a href="{{ url_for('export_transactions') }}" class="btn btn-secondary btn-sm" title="Download Official Statement">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <span>Download CSV</span>
+      </a>
+    </div>
+
+  </div>
+
+  <!-- Transactions Table -->
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Reference #</th>
+          <th>Particulars / Description</th>
+          <th>Category</th>
+          <th>Type</th>
+          <th>Date & Time</th>
+          <th style="text-align: right;">Amount (INR)</th>
+          <th style="text-align: center;">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if transactions %}
+          {% set user_account_ids = user.accounts | map(attribute='id') | list %}
+          {% for t in transactions %}
+          {% set is_credit = (t.dest_account_id in user_account_ids and t.source_account_id not in user_account_ids) %}
+          <tr class="transaction-row">
+            <td>
+              <span class="mono-num" style="font-size: 0.75rem; color: var(--text-secondary); cursor: pointer;" title="Copy Ref ID" data-copy="{{ t.reference_id }}">
+                {{ t.reference_id }}
+              </span>
+            </td>
+            <td>
+              <div style="font-weight: 500; color: var(--text-primary);">{{ t.description }}</div>
+            </td>
+            <td>
+              <span class="badge badge-neutral">{{ t.category }}</span>
+            </td>
+            <td>
+              <span style="font-size: 0.75rem; text-transform: capitalize; color: var(--text-secondary);">
+                {{ t.transaction_type.replace('_', ' ') }}
+              </span>
+            </td>
+            <td style="color: var(--text-tertiary); font-size: 0.78rem; white-space: nowrap;">
+              {{ t.timestamp | datetime_format }}
+            </td>
+            <td style="text-align: right; white-space: nowrap;">
+              <span class="mono-num maskable-balance {% if is_credit %}amount-positive{% else %}amount-negative{% endif %}" style="font-size: 0.9rem; font-weight: 700;">
+                {% if is_credit %}+{% else %}-{% endif %}{{ t.amount | currency }}
+              </span>
+            </td>
+            <td style="text-align: center;">
+              <span class="badge badge-success">{{ t.status.capitalize() }}</span>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--text-tertiary); padding: 40px;">
+              No records found for the selected filter.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}
