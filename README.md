@@ -5,7 +5,7 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17%2B-336791.svg?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-Supported-3ECF8E.svg?logo=supabase&logoColor=white)](https://supabase.com/)
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-ORM-d71f00.svg)](https://www.sqlalchemy.org/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE.md)
 
 **NeoBank** is a modern, full-stack digital banking web application built with **Flask**, **SQLAlchemy**, and **Supabase (PostgreSQL)**. It features high-yield savings accounts, virtual debit cards with real-time controls, instant money transfers with live account lookup, an intelligent loan underwriting engine, customizable savings vaults, and an autonomous midnight banking engine for automated daily interest accruals and loan EMI debits.
 
@@ -226,4 +226,4 @@ Contributions, issues, and feature requests are welcome!
 
 ## License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the MIT License. See `LICENSE.md` for more information.
