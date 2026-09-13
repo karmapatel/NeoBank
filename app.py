@@ -344,7 +344,7 @@ def create_app(test_config=None):
 
     # --- Autonomous 12:00 AM Midnight Scheduler Startup ---
     if not app.config.get('TESTING'):
-        if os.environ.get('WERKZEUG_RUN_MAIN') != 'false':
+        if os.environ.get('WERKZEUG_RUN_MAIN') != 'false' and not os.environ.get('VERCEL'):
             start_midnight_scheduler(app)
 
     @app.before_request
@@ -1880,8 +1880,10 @@ def create_app(test_config=None):
 
     return app
 
+# Top-level WSGI instance for Vercel, Gunicorn, and production deployments
+app = create_app()
+
 if __name__ == '__main__':
-    app = create_app()
     with app.app_context():
         target_db = app.config.get('SQLALCHEMY_DATABASE_URI', '')
         if '@' in target_db:
